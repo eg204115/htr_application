@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:image_picker/image_picker.dart';
 import '../widgets/image_preview.dart';
 import '../widgets/recognition_result.dart';
@@ -25,37 +26,44 @@ class _HomeScreenState extends State<HomeScreen> {
           style: TextStyle(
             fontWeight: FontWeight.bold,
             color: Colors.white,
+            fontSize: 18.sp, // Responsive font size
           ),
         ),
         backgroundColor: Colors.blue.shade700,
         elevation: 0,
+        centerTitle: true,
       ),
-      body: SingleChildScrollView(
-        padding: EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // App title and description
-            _buildAppDescription(),
-            SizedBox(height: 30),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: EdgeInsets.symmetric(
+            horizontal: 20.w, // Responsive horizontal padding
+            vertical: 20.h,  // Responsive vertical padding
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // App title and description
+              _buildAppDescription(),
+              SizedBox(height: 30.h),
 
-            // Image preview section
-            ImagePreviewWidget(
-              selectedImage: _selectedImage,
-              onTap: _showImageSourceDialog,
-            ),
-            SizedBox(height: 30),
+              // Image preview section
+              ImagePreviewWidget(
+                selectedImage: _selectedImage,
+                onTap: _showImageSourceDialog,
+              ),
+              SizedBox(height: 30.h),
 
-            // Action buttons
-            _buildActionButtons(),
-            SizedBox(height: 30),
+              // Action buttons
+              _buildActionButtons(),
+              SizedBox(height: 30.h),
 
-            // Recognition result section
-            RecognitionResultWidget(
-              recognizedText: _recognizedText,
-              isProcessing: _isProcessing,
-            ),
-          ],
+              // Recognition result section
+              RecognitionResultWidget(
+                recognizedText: _recognizedText,
+                isProcessing: _isProcessing,
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -68,64 +76,88 @@ class _HomeScreenState extends State<HomeScreen> {
         Text(
           'Convert Handwritten Text to Digital Format',
           style: TextStyle(
-            fontSize: 24,
+            fontSize: 24.sp,     // Responsive font size
             fontWeight: FontWeight.bold,
             color: Colors.blue.shade800,
+            height: 1.3,         // Better line height for responsiveness
           ),
+          textAlign: TextAlign.left,
         ),
-        SizedBox(height: 10),
+        SizedBox(height: 10.h),
         Text(
           'Capture or upload an image of handwritten text and convert it to editable digital text.',
           style: TextStyle(
-            fontSize: 16,
+            fontSize: 14.sp,     // Responsive font size
             color: Colors.grey.shade600,
+            height: 1.4,         // Better line height
           ),
+          textAlign: TextAlign.left,
         ),
       ],
     );
   }
 
   Widget _buildActionButtons() {
-    return Row(
-      children: [
-        Expanded(
-          child: ElevatedButton.icon(
-            icon: Icon(Icons.photo_library, size: 20),
-            label: Text(
-              'Choose from Gallery',
-              style: TextStyle(fontSize: 16),
-            ),
-            onPressed: _pickImageFromGallery,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.green.shade500,
-              foregroundColor: Colors.white,
-              padding: EdgeInsets.symmetric(vertical: 15),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-          ),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // For very small screens, stack buttons vertically
+        if (constraints.maxWidth < 350) {
+          return Column(
+            children: [
+              _buildGalleryButton(),
+              SizedBox(height: 12.h),
+              _buildCameraButton(),
+            ],
+          );
+        }
+
+        // For normal screens, use horizontal layout
+        return Row(
+          children: [
+            Expanded(child: _buildGalleryButton()),
+            SizedBox(width: 12.w),
+            Expanded(child: _buildCameraButton()),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildGalleryButton() {
+    return ElevatedButton.icon(
+      icon: Icon(Icons.photo_library, size: 20.w), // Responsive icon size
+      label: Text(
+        'Choose from Gallery',
+        style: TextStyle(fontSize: 14.sp), // Responsive font size
+      ),
+      onPressed: _pickImageFromGallery,
+      style: ElevatedButton.styleFrom(
+        backgroundColor: Colors.green.shade500,
+        foregroundColor: Colors.white,
+        padding: EdgeInsets.symmetric(vertical: 15.h), // Responsive padding
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12.r), // Responsive border radius
         ),
-        SizedBox(width: 12),
-        Expanded(
-          child: ElevatedButton.icon(
-            icon: Icon(Icons.camera_alt, size: 20),
-            label: Text(
-              'Take Photo',
-              style: TextStyle(fontSize: 16),
-            ),
-            onPressed: _takePhoto,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.blue.shade600,
-              foregroundColor: Colors.white,
-              padding: EdgeInsets.symmetric(vertical: 15),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-          ),
+      ),
+    );
+  }
+
+  Widget _buildCameraButton() {
+    return ElevatedButton.icon(
+      icon: Icon(Icons.camera_alt, size: 20.w), // Responsive icon size
+      label: Text(
+        'Take Photo',
+        style: TextStyle(fontSize: 14.sp), // Responsive font size
+      ),
+      onPressed: _takePhoto,
+      style: ElevatedButton.styleFrom(
+        backgroundColor: Colors.blue.shade600,
+        foregroundColor: Colors.white,
+        padding: EdgeInsets.symmetric(vertical: 15.h), // Responsive padding
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12.r), // Responsive border radius
         ),
-      ],
+      ),
     );
   }
 
@@ -172,28 +204,68 @@ class _HomeScreenState extends State<HomeScreen> {
 
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text('Image Options'),
-        content: Text('What would you like to do with this image?'),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              _recognizeText();
-            },
-            child: Text('Recognize Text'),
+      builder: (context) => Dialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16.r), // Responsive border radius
+        ),
+        child: Padding(
+          padding: EdgeInsets.all(20.w), // Responsive padding
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'Image Options',
+                style: TextStyle(
+                  fontSize: 18.sp, // Responsive font size
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              SizedBox(height: 16.h),
+              Text(
+                'What would you like to do with this image?',
+                style: TextStyle(fontSize: 14.sp), // Responsive font size
+                textAlign: TextAlign.center,
+              ),
+              SizedBox(height: 24.h),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () {
+                        Navigator.pop(context);
+                        _recognizeText();
+                      },
+                      child: Text(
+                        'Recognize Text',
+                        style: TextStyle(fontSize: 14.sp), // Responsive font size
+                      ),
+                    ),
+                  ),
+                  SizedBox(width: 12.w),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () {
+                        Navigator.pop(context);
+                        setState(() {
+                          _selectedImage = null;
+                          _recognizedText = '';
+                        });
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.red.shade500,
+                        foregroundColor: Colors.white,
+                      ),
+                      child: Text(
+                        'Remove Image',
+                        style: TextStyle(fontSize: 14.sp), // Responsive font size
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              setState(() {
-                _selectedImage = null;
-                _recognizedText = '';
-              });
-            },
-            child: Text('Remove Image'),
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -222,9 +294,16 @@ class _HomeScreenState extends State<HomeScreen> {
   void _showErrorSnackBar(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(message),
+        content: Text(
+          message,
+          style: TextStyle(fontSize: 14.sp), // Responsive font size
+        ),
         backgroundColor: Colors.red,
         behavior: SnackBarBehavior.floating,
+        margin: EdgeInsets.all(16.w), // Responsive margin
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8.r), // Responsive border radius
+        ),
       ),
     );
   }
