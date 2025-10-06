@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
+import '../constants/colors.dart';
+
 class RecognitionResultWidget extends StatelessWidget {
   final String recognizedText;
   final bool isProcessing;
@@ -20,16 +22,16 @@ class RecognitionResultWidget extends StatelessWidget {
           children: [
             Icon(
               Icons.text_fields,
-              color: Colors.blue.shade700,
-              size: 20.w, // Responsive icon size
+              color: AppColors.iconPrimary, // Updated color
+              size: 20.w,
             ),
             SizedBox(width: 8.w),
             Text(
               'Recognized Text',
               style: TextStyle(
-                fontSize: 18.sp, // Responsive font size
+                fontSize: 18.sp,
                 fontWeight: FontWeight.bold,
-                color: Colors.blue.shade800,
+                color: AppColors.textPrimary, // Updated color
               ),
             ),
           ],
@@ -37,14 +39,14 @@ class RecognitionResultWidget extends StatelessWidget {
         SizedBox(height: 12.h),
         Container(
           width: double.infinity,
-          constraints: BoxConstraints(minHeight: 120.h), // Responsive min height
-          padding: EdgeInsets.all(16.w), // Responsive padding
+          constraints: BoxConstraints(minHeight: 120.h),
+          padding: EdgeInsets.all(16.w),
           decoration: BoxDecoration(
-            color: Colors.grey.shade50,
-            borderRadius: BorderRadius.circular(12.r), // Responsive border radius
+            color: AppColors.backgroundWhite, // Updated color
+            borderRadius: BorderRadius.circular(12.r),
             border: Border.all(
-              color: Colors.grey.shade300,
-              width: 1.w, // Responsive border width
+              color: AppColors.borderLight, // Updated color
+              width: 1.w,
             ),
           ),
           child: isProcessing
@@ -53,19 +55,19 @@ class RecognitionResultWidget extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 SizedBox(
-                  width: 24.w, // Responsive loader size
-                  height: 24.w, // Responsive loader size
+                  width: 24.w,
+                  height: 24.w,
                   child: CircularProgressIndicator(
-                    color: Colors.blue.shade700,
-                    strokeWidth: 2.w, // Responsive stroke width
+                    color: AppColors.primaryBlue, // Updated color
+                    strokeWidth: 2.w,
                   ),
                 ),
                 SizedBox(height: 16.h),
                 Text(
                   'Processing your image...',
                   style: TextStyle(
-                    color: Colors.grey.shade600,
-                    fontSize: 14.sp, // Responsive font size
+                    color: AppColors.textSecondary, // Updated color
+                    fontSize: 14.sp,
                   ),
                 ),
               ],
@@ -76,8 +78,8 @@ class RecognitionResultWidget extends StatelessWidget {
             child: SelectableText(
               recognizedText,
               style: TextStyle(
-                fontSize: 16.sp, // Responsive font size
-                color: Colors.grey.shade800,
+                fontSize: 16.sp,
+                color: AppColors.textPrimary, // Updated color
                 height: 1.4,
               ),
             ),
@@ -86,11 +88,11 @@ class RecognitionResultWidget extends StatelessWidget {
             child: Padding(
               padding: EdgeInsets.all(8.w),
               child: Text(
-                'No text recognized yet.\nSelect an image and tap recognize.',
+                'No text recognized yet.\nSelect files and tap transcribe.',
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                  color: Colors.grey.shade500,
-                  fontSize: 14.sp, // Responsive font size
+                  color: AppColors.textLight, // Updated color
+                  fontSize: 14.sp,
                 ),
               ),
             ),
@@ -100,23 +102,23 @@ class RecognitionResultWidget extends StatelessWidget {
           SizedBox(height: 16.h),
           Center(
             child: ElevatedButton.icon(
-              icon: Icon(Icons.content_copy, size: 18.w), // Responsive icon size
+              icon: Icon(Icons.content_copy, size: 18.w, color: AppColors.primaryWhite),
               label: Text(
                 'Copy to Clipboard',
-                style: TextStyle(fontSize: 14.sp), // Responsive font size
+                style: TextStyle(fontSize: 14.sp, color: AppColors.primaryWhite),
               ),
               onPressed: () {
                 _copyToClipboard(context, recognizedText);
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blue.shade600,
-                foregroundColor: Colors.white,
+                backgroundColor: AppColors.buttonPrimary, // Updated color
+                foregroundColor: AppColors.primaryWhite,
                 padding: EdgeInsets.symmetric(
-                  vertical: 12.h, // Responsive padding
-                  horizontal: 20.w, // Responsive padding
+                  vertical: 12.h,
+                  horizontal: 20.w,
                 ),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8.r), // Responsive border radius
+                  borderRadius: BorderRadius.circular(8.r),
                 ),
               ),
             ),
@@ -125,6 +127,7 @@ class RecognitionResultWidget extends StatelessWidget {
       ],
     );
   }
+
 
   void _copyToClipboard(BuildContext context, String text) {
     showDialog(

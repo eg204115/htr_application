@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:camera/camera.dart';
+import '../constants/colors.dart';
 import 'dart:io';
 import 'package:image_cropper/image_cropper.dart';
 
@@ -54,15 +55,15 @@ class _CameraScreenState extends State<CameraScreen> {
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
-        backgroundColor: Colors.black,
+        backgroundColor: AppColors.primaryBlue, // Updated color
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.close, color: Colors.white),
+          icon: Icon(Icons.close, color: AppColors.primaryWhite), // Updated color
           onPressed: () => Navigator.pop(context, _capturedImages),
         ),
         title: Text(
           'Capture Documents',
-          style: TextStyle(color: Colors.white, fontSize: 18.sp),
+          style: TextStyle(color: AppColors.primaryWhite, fontSize: 18.sp), // Updated color
         ),
         actions: [
           if (_capturedImages.isNotEmpty)
@@ -70,7 +71,7 @@ class _CameraScreenState extends State<CameraScreen> {
               onPressed: () => Navigator.pop(context, _capturedImages),
               child: Text(
                 'Done (${_capturedImages.length})',
-                style: TextStyle(color: Colors.blue, fontSize: 16.sp),
+                style: TextStyle(color: AppColors.primaryWhite, fontSize: 16.sp), // Updated color
               ),
             ),
         ],
@@ -158,7 +159,7 @@ class _CameraScreenState extends State<CameraScreen> {
   Widget _buildCameraControls() {
     return Container(
       padding: EdgeInsets.symmetric(vertical: 20.h, horizontal: 16.w),
-      color: Colors.black,
+      color: AppColors.primaryBlue,
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [

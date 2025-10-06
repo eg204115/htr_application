@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:file_picker/file_picker.dart';
+import '../constants/colors.dart'; // Import colors
 import 'camera_screen.dart';
 import '../widgets/recognition_result.dart';
 import '../services/mock_recognition_service.dart';
@@ -22,25 +23,54 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppColors.backgroundLight,
       appBar: AppBar(
-        title: Text(
-          'Document Transcription',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-            fontSize: 18.sp,
-          ),
+        title: Row(
+          children: [
+            // App Icon
+            Image.asset(
+              'assets/images/icon.png',
+              width: 60.w, // Slightly smaller for better proportion
+              height: 60.w,
+              fit: BoxFit.cover,
+            ),
+            SizedBox(width: 4.w),
+            // App Name and Description
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'Inkling',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.primaryWhite,
+                    fontSize: 20.sp,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+                SizedBox(height: 2.h),
+                Text(
+                  'Write. Scan. Digital.',
+                  style: TextStyle(
+                    color: AppColors.primaryWhite.withOpacity(0.9),
+                    fontSize: 12.sp,
+                    fontWeight: FontWeight.w400,
+                    letterSpacing: 0.3,
+                  ),
+                ),
+              ],
+            ),
+          ],
         ),
-        backgroundColor: Colors.blue.shade700,
+        backgroundColor: AppColors.primaryBlue,
         elevation: 0,
-        centerTitle: true,
+        centerTitle: false, // Important: Set to false for left alignment
       ),
+
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: EdgeInsets.symmetric(
-            horizontal: 20.w,
-            vertical: 20.h,
-          ),
+          padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 20.h),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
@@ -81,16 +111,16 @@ class _HomeScreenState extends State<HomeScreen> {
           style: TextStyle(
             fontSize: 24.sp,
             fontWeight: FontWeight.bold,
-            color: Colors.blue.shade800,
+            color: AppColors.textPrimary,
             height: 1.3,
           ),
         ),
         SizedBox(height: 10.h),
         Text(
-          'Capture, upload, or select handwritten documents and convert them to editable digital text. Support for images, PDFs, and Word documents.',
+          'Capture, upload, or select handwritten documents and convert them to editable digital text.',
           style: TextStyle(
             fontSize: 14.sp,
-            color: Colors.grey.shade600,
+            color: AppColors.textSecondary,
             height: 1.4,
           ),
         ),
@@ -100,11 +130,18 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildFileSelectionSection() {
     return Container(
-      padding: EdgeInsets.all(16.w),
+      padding: EdgeInsets.all(20.w),
       decoration: BoxDecoration(
-        color: Colors.grey.shade50,
+        color: AppColors.backgroundWhite,
         borderRadius: BorderRadius.circular(16.r),
-        border: Border.all(color: Colors.grey.shade300),
+        border: Border.all(color: AppColors.borderLight),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.shadowLight,
+            blurRadius: 8.r,
+            offset: Offset(0, 2.h),
+          ),
+        ],
       ),
       child: Column(
         children: [
@@ -113,10 +150,10 @@ class _HomeScreenState extends State<HomeScreen> {
             style: TextStyle(
               fontSize: 18.sp,
               fontWeight: FontWeight.bold,
-              color: Colors.blue.shade800,
+              color: AppColors.textPrimary,
             ),
           ),
-          SizedBox(height: 16.h),
+          SizedBox(height: 20.h),
           _buildFileSelectionButtons(),
         ],
       ),
@@ -153,15 +190,15 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildCameraButton() {
     return ElevatedButton.icon(
-      icon: Icon(Icons.camera_alt, size: 20.w),
+      icon: Icon(Icons.camera_alt, size: 20.w, color: AppColors.primaryWhite),
       label: Text(
         'Camera',
-        style: TextStyle(fontSize: 14.sp),
+        style: TextStyle(fontSize: 14.sp, color: AppColors.primaryWhite),
       ),
       onPressed: _openCamera,
       style: ElevatedButton.styleFrom(
-        backgroundColor: Colors.blue.shade600,
-        foregroundColor: Colors.white,
+        backgroundColor: AppColors.buttonPrimary,
+        foregroundColor: AppColors.primaryWhite,
         padding: EdgeInsets.symmetric(vertical: 16.h, horizontal: 12.w),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12.r),
@@ -172,15 +209,19 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildGalleryButton() {
     return ElevatedButton.icon(
-      icon: Icon(Icons.photo_library, size: 20.w),
+      icon: Icon(
+        Icons.photo_library,
+        size: 20.w,
+        color: AppColors.primaryWhite,
+      ),
       label: Text(
         'Gallery',
-        style: TextStyle(fontSize: 14.sp),
+        style: TextStyle(fontSize: 14.sp, color: AppColors.primaryWhite),
       ),
       onPressed: _pickFromGallery,
       style: ElevatedButton.styleFrom(
-        backgroundColor: Colors.green.shade600,
-        foregroundColor: Colors.white,
+        backgroundColor: AppColors.buttonSecondary,
+        foregroundColor: AppColors.primaryWhite,
         padding: EdgeInsets.symmetric(vertical: 16.h, horizontal: 12.w),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12.r),
@@ -191,15 +232,19 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildDocumentButton() {
     return ElevatedButton.icon(
-      icon: Icon(Icons.insert_drive_file, size: 20.w),
+      icon: Icon(
+        Icons.insert_drive_file,
+        size: 20.w,
+        color: AppColors.primaryWhite,
+      ),
       label: Text(
         'Documents',
-        style: TextStyle(fontSize: 14.sp),
+        style: TextStyle(fontSize: 14.sp, color: AppColors.primaryWhite),
       ),
       onPressed: _pickDocuments,
       style: ElevatedButton.styleFrom(
-        backgroundColor: Colors.purple.shade600,
-        foregroundColor: Colors.white,
+        backgroundColor: AppColors.info,
+        foregroundColor: AppColors.primaryWhite,
         padding: EdgeInsets.symmetric(vertical: 16.h, horizontal: 12.w),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12.r),
@@ -209,28 +254,32 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildSelectedFilesPreview() {
-    final hasFiles = _selectedImages.isNotEmpty || _selectedDocuments.isNotEmpty;
+    final hasFiles =
+        _selectedImages.isNotEmpty || _selectedDocuments.isNotEmpty;
 
     if (!hasFiles) {
       return Container(
         padding: EdgeInsets.all(24.w),
         decoration: BoxDecoration(
-          color: Colors.grey.shade50,
+          color: AppColors.backgroundWhite,
           borderRadius: BorderRadius.circular(16.r),
-          border: Border.all(color: Colors.grey.shade300, style: BorderStyle.solid),
+          border: Border.all(
+            color: AppColors.borderLight,
+            style: BorderStyle.solid,
+          ),
         ),
         child: Column(
           children: [
-            Icon(Icons.folder_open, size: 48.w, color: Colors.grey.shade400),
+            Icon(Icons.folder_open, size: 48.w, color: AppColors.textLight),
             SizedBox(height: 12.h),
             Text(
               'No files selected',
-              style: TextStyle(fontSize: 16.sp, color: Colors.grey.shade600),
+              style: TextStyle(fontSize: 16.sp, color: AppColors.textSecondary),
             ),
             SizedBox(height: 8.h),
             Text(
               'Use the buttons above to add images or documents',
-              style: TextStyle(fontSize: 12.sp, color: Colors.grey.shade500),
+              style: TextStyle(fontSize: 12.sp, color: AppColors.textLight),
               textAlign: TextAlign.center,
             ),
           ],
@@ -243,17 +292,21 @@ class _HomeScreenState extends State<HomeScreen> {
       children: [
         Row(
           children: [
-            Icon(Icons.attachment, color: Colors.blue.shade700, size: 20.w),
+            Icon(Icons.attachment, color: AppColors.iconPrimary, size: 20.w),
             SizedBox(width: 8.w),
             Text(
               'Selected Files',
-              style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                fontSize: 18.sp,
+                fontWeight: FontWeight.bold,
+                color: AppColors.textPrimary,
+              ),
             ),
             SizedBox(width: 8.w),
             Container(
               padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
               decoration: BoxDecoration(
-                color: Colors.blue.shade100,
+                color: AppColors.primaryBlue.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(12.r),
               ),
               child: Text(
@@ -261,7 +314,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 style: TextStyle(
                   fontSize: 12.sp,
                   fontWeight: FontWeight.bold,
-                  color: Colors.blue.shade800,
+                  color: AppColors.textPrimary,
                 ),
               ),
             ),
@@ -277,25 +330,25 @@ class _HomeScreenState extends State<HomeScreen> {
     return Column(
       children: [
         // Images
-        ..._selectedImages.asMap().entries.map((entry) =>
-            _buildFileItem(
-              entry.value.name,
-              Icons.photo,
-              Colors.green,
-              entry.key,
-              isImage: true,
-            )
+        ..._selectedImages.asMap().entries.map(
+          (entry) => _buildFileItem(
+            entry.value.name,
+            Icons.photo,
+            AppColors.success,
+            entry.key,
+            isImage: true,
+          ),
         ),
 
         // Documents
-        ..._selectedDocuments.asMap().entries.map((entry) =>
-            _buildFileItem(
-              entry.value.name,
-              _getDocumentIcon(entry.value.extension),
-              Colors.blue,
-              entry.key + _selectedImages.length,
-              isImage: false,
-            )
+        ..._selectedDocuments.asMap().entries.map(
+          (entry) => _buildFileItem(
+            entry.value.name,
+            _getDocumentIcon(entry.value.extension),
+            AppColors.info,
+            entry.key + _selectedImages.length,
+            isImage: false,
+          ),
         ),
 
         SizedBox(height: 16.h),
@@ -303,27 +356,48 @@ class _HomeScreenState extends State<HomeScreen> {
           children: [
             Expanded(
               child: OutlinedButton.icon(
-                icon: Icon(Icons.add, size: 18.w),
-                label: Text('Add More Files'),
+                icon: Icon(
+                  Icons.add,
+                  size: 18.w,
+                  color: AppColors.buttonPrimary,
+                ),
+                label: Text(
+                  'Add More Files',
+                  style: TextStyle(color: AppColors.buttonPrimary),
+                ),
                 onPressed: _showFileSourceDialog,
                 style: OutlinedButton.styleFrom(
-                  padding: EdgeInsets.symmetric(vertical: 14.h, horizontal: 16.w),
+                  padding: EdgeInsets.symmetric(
+                    vertical: 14.h,
+                    horizontal: 16.w,
+                  ),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8.r),
                   ),
+                  side: BorderSide(color: AppColors.buttonPrimary),
                 ),
               ),
             ),
             SizedBox(width: 12.w),
             Expanded(
               child: ElevatedButton.icon(
-                icon: Icon(Icons.delete, size: 18.w),
-                label: Text('Clear All'),
+                icon: Icon(
+                  Icons.delete,
+                  size: 18.w,
+                  color: AppColors.primaryWhite,
+                ),
+                label: Text(
+                  'Clear All',
+                  style: TextStyle(color: AppColors.primaryWhite),
+                ),
                 onPressed: _clearAllFiles,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.red.shade500,
-                  foregroundColor: Colors.white,
-                  padding: EdgeInsets.symmetric(vertical: 14.h, horizontal: 16.w),
+                  backgroundColor: AppColors.buttonDanger,
+                  foregroundColor: AppColors.primaryWhite,
+                  padding: EdgeInsets.symmetric(
+                    vertical: 14.h,
+                    horizontal: 16.w,
+                  ),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8.r),
                   ),
@@ -336,17 +410,23 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildFileItem(String fileName, IconData icon, Color color, int index, {required bool isImage}) {
+  Widget _buildFileItem(
+    String fileName,
+    IconData icon,
+    Color color,
+    int index, {
+    required bool isImage,
+  }) {
     return Container(
       margin: EdgeInsets.only(bottom: 12.h),
       padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.backgroundWhite,
         borderRadius: BorderRadius.circular(12.r),
-        border: Border.all(color: Colors.grey.shade300),
+        border: Border.all(color: AppColors.borderLight),
         boxShadow: [
           BoxShadow(
-            color: Colors.black12,
+            color: AppColors.shadowLight,
             blurRadius: 4.r,
             offset: Offset(0, 2.h),
           ),
@@ -372,22 +452,20 @@ class _HomeScreenState extends State<HomeScreen> {
                   style: TextStyle(
                     fontSize: 14.sp,
                     fontWeight: FontWeight.w500,
+                    color: AppColors.textPrimary,
                   ),
                   overflow: TextOverflow.ellipsis,
                 ),
                 SizedBox(height: 4.h),
                 Text(
                   isImage ? 'Image' : 'Document',
-                  style: TextStyle(
-                    fontSize: 12.sp,
-                    color: Colors.grey.shade600,
-                  ),
+                  style: TextStyle(fontSize: 12.sp, color: AppColors.textLight),
                 ),
               ],
             ),
           ),
           IconButton(
-            icon: Icon(Icons.close, size: 20.w, color: Colors.grey.shade500),
+            icon: Icon(Icons.close, size: 20.w, color: AppColors.textLight),
             onPressed: () => _removeFile(index, isImage),
             padding: EdgeInsets.all(8.w),
           ),
@@ -397,7 +475,8 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildActionButtons() {
-    final hasFiles = _selectedImages.isNotEmpty || _selectedDocuments.isNotEmpty;
+    final hasFiles =
+        _selectedImages.isNotEmpty || _selectedDocuments.isNotEmpty;
 
     if (!hasFiles) return SizedBox();
 
@@ -405,15 +484,23 @@ class _HomeScreenState extends State<HomeScreen> {
       children: [
         Expanded(
           child: ElevatedButton.icon(
-            icon: Icon(Icons.text_fields, size: 24.w),
+            icon: Icon(
+              Icons.text_fields,
+              size: 24.w,
+              color: AppColors.primaryWhite,
+            ),
             label: Text(
               'Transcribe All Files',
-              style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                fontSize: 16.sp,
+                fontWeight: FontWeight.bold,
+                color: AppColors.primaryWhite,
+              ),
             ),
             onPressed: _transcribeAllFiles,
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.blue.shade700,
-              foregroundColor: Colors.white,
+              backgroundColor: AppColors.buttonPrimary,
+              foregroundColor: AppColors.primaryWhite,
               padding: EdgeInsets.symmetric(vertical: 18.h, horizontal: 16.w),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12.r),
@@ -526,18 +613,29 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildSourceOption(IconData icon, String title, String subtitle, VoidCallback onTap) {
+  Widget _buildSourceOption(
+    IconData icon,
+    String title,
+    String subtitle,
+    VoidCallback onTap,
+  ) {
     return ListTile(
       leading: Container(
         padding: EdgeInsets.all(12.w),
         decoration: BoxDecoration(
-          color: Colors.blue.shade50,
+          color: AppColors.primaryBlue.withOpacity(0.1),
           borderRadius: BorderRadius.circular(8.r),
         ),
-        child: Icon(icon, color: Colors.blue.shade700),
+        child: Icon(icon, color: AppColors.primaryBlue),
       ),
-      title: Text(title, style: TextStyle(fontSize: 16.sp)),
-      subtitle: Text(subtitle, style: TextStyle(fontSize: 12.sp)),
+      title: Text(
+        title,
+        style: TextStyle(fontSize: 16.sp, color: AppColors.textPrimary),
+      ),
+      subtitle: Text(
+        subtitle,
+        style: TextStyle(fontSize: 12.sp, color: AppColors.textLight),
+      ),
       onTap: () {
         Navigator.pop(context);
         onTap();
