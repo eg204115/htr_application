@@ -36,6 +36,11 @@ dependencies:
   cupertino_icons: ^1.0.8
   image_picker: ^1.2.0
   flutter_screenutil: ^5.9.3
+  file_picker: ^10.3.3
+  camera: ^0.11.2
+  pdfx: ^2.9.2
+  image_cropper: ^11.0.0
+  camera_windows: ^0.2.6+2
 
 dev_dependencies:
   flutter_test:
