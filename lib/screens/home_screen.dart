@@ -548,44 +548,112 @@ class _HomeScreenState extends State<HomeScreen> {
     setState(() => _isProcessing = true);
 
     try {
-      // 1) quick health check (optional but nice)
+      // 1) Quick health check
       try {
-        final h = await _ocrService.health();
-        if (h.status.toLowerCase() != 'healthy') {
+        print('🩺 Performing health check...');
+        final health = await _ocrService.health();
+        print('✅ Health check response: ${health.status}, TrOCR available: ${health.trocrAvailable}');
+
+        if (health.status.toLowerCase() != 'healthy') {
           _showErrorSnackBar('Server not healthy');
           setState(() => _isProcessing = false);
           return;
         }
-      } catch (_) {
-        _showErrorSnackBar('Cannot reach OCR server. Check URL / network.');
+      } catch (e) {
+        print('❌ Health check failed: $e');
+        _showErrorSnackBar('Cannot reach OCR server. Check URL / network: $e');
         setState(() => _isProcessing = false);
         return;
       }
 
-      String combinedText = '=== TRANSCRIPTION RESULTS ===\n\n';
+      String combinedText = '';
 
-      // 2) images -> /process
-      for (final image in _selectedImages) {
+      // 2) Process images through /process endpoint
+      for (int i = 0; i < _selectedImages.length; i++) {
+        final image = _selectedImages[i];
+
+        print('🖼️ Processing image ${i + 1}/${_selectedImages.length}: ${image.name}');
+
+        // Show progress for multiple images
+        if (_selectedImages.length > 1) {
+          setState(() {
+            _recognizedText = 'Processing image ${i + 1} of ${_selectedImages.length}...\n$combinedText';
+          });
+        }
+
         final result = await _ocrService.processImage(image, method: 'hybrid');
-        if (result.success) {
-          final txt = (result.text ?? '').trim();
-          final conf = result.confidence?.toStringAsFixed(3) ?? '—';
-          combinedText += '📷 ${image.name}\nConfidence: $conf\n$txt\n\n';
+
+        // Debug log the full response
+        print('📡 API Response for ${image.name}:');
+        print('   - Success: ${result.success}');
+        print('   - Text length: ${result.text?.length ?? 0}');
+        print('   - Confidence: ${result.confidence}');
+        print('   - Error: ${result.error}');
+        print('   - Has processed image: ${result.processedImageBase64 != null && result.processedImageBase64!.isNotEmpty}');
+
+        if (result.success && result.text != null && result.text!.isNotEmpty) {
+          final txt = result.text!.trim();
+          final conf = result.confidence?.toStringAsFixed(3) ?? 'N/A';
+
+          print('✅ Successfully processed ${image.name}');
+          print('   Extracted text: "$txt"');
+          print('   Confidence: $conf');
+
+          // Format the output nicely
+          if (_selectedImages.length > 1) {
+            combinedText += '📷 ${image.name}\n';
+            combinedText += 'Confidence: $conf\n';
+            combinedText += '$txt\n\n${'-' * 40}\n\n';
+          } else {
+            combinedText = txt; // Just show the text directly for single image
+          }
+
+          // Show success message for each image
+          if (_selectedImages.length > 1) {
+            _showSuccessSnackBar('Processed ${image.name} successfully');
+          }
         } else {
-          combinedText += '📷 ${image.name}\nERROR: ${result.error ?? 'Unknown error'}\n\n';
+          final errorMsg = result.error ?? 'Unknown error occurred';
+          print('❌ Failed to process ${image.name}: $errorMsg');
+
+          if (_selectedImages.length > 1) {
+            combinedText += '📷 ${image.name}\n';
+            combinedText += 'ERROR: $errorMsg\n\n${'-' * 40}\n\n';
+          } else {
+            combinedText = 'Error processing image: $errorMsg';
+          }
+          _showErrorSnackBar('Failed to process ${image.name}: $errorMsg');
         }
       }
 
-      // 3) documents -> not supported by the Flask endpoint (only images)
+      // 3) Handle documents (show warning since Flask only processes images)
       if (_selectedDocuments.isNotEmpty) {
-        combinedText +=
-        '⚠ ${_selectedDocuments.length} document(s) were selected, but the server only accepts images at /process.\n';
+        print('📄 Documents selected but not processed: ${_selectedDocuments.length}');
+        final docWarning = '\n\n⚠ Note: ${_selectedDocuments.length} document(s) were selected but only images can be processed by the current API.';
+        combinedText += docWarning;
+        _showInfoSnackBar('Documents are not supported for OCR processing');
       }
 
-      setState(() => _recognizedText = combinedText);
+      // Update the final text
+      print('📝 Final combined text length: ${combinedText.length}');
+      setState(() => _recognizedText = combinedText.trim());
+
+      // Show final success message if we processed any images successfully
+      if (_selectedImages.isNotEmpty && _recognizedText.isNotEmpty && !_recognizedText.contains('ERROR')) {
+        print('🎉 Transcription completed successfully!');
+        _showSuccessSnackBar('Transcription completed successfully!');
+      } else {
+        print('⚠ Transcription completed with warnings or no text extracted');
+      }
+
     } catch (e) {
-      _showErrorSnackBar('Transcription failed: $e');
+      print('💥 Transcription failed with exception: $e');
+      print('Stack trace: ${e.toString()}');
+      final errorMsg = 'Transcription failed: $e';
+      setState(() => _recognizedText = errorMsg);
+      _showErrorSnackBar(errorMsg);
     } finally {
+      print('🔚 Transcription process finished');
       setState(() => _isProcessing = false);
     }
   }
@@ -598,6 +666,32 @@ class _HomeScreenState extends State<HomeScreen> {
         behavior: SnackBarBehavior.floating,
         margin: EdgeInsets.all(16.w),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.r)),
+      ),
+    );
+  }
+
+  void _showSuccessSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message, style: TextStyle(fontSize: 14.sp, color: AppColors.primaryWhite)),
+        backgroundColor: Colors.green,
+        behavior: SnackBarBehavior.floating,
+        margin: EdgeInsets.all(16.w),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.r)),
+        duration: Duration(seconds: 3),
+      ),
+    );
+  }
+
+  void _showInfoSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message, style: TextStyle(fontSize: 14.sp, color: AppColors.primaryWhite)),
+        backgroundColor: Colors.blue,
+        behavior: SnackBarBehavior.floating,
+        margin: EdgeInsets.all(16.w),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.r)),
+        duration: Duration(seconds: 3),
       ),
     );
   }

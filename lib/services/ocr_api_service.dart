@@ -48,7 +48,7 @@ class OcrApiService {
     required String baseUrl,
     String? apiKey, // optional Bearer token if you enabled auth
     Duration connectTimeout = const Duration(seconds: 10),
-    Duration receiveTimeout = const Duration(seconds: 60),
+    Duration receiveTimeout = const Duration(seconds: 200),
   }) : _dio = Dio(
     BaseOptions(
       baseUrl: baseUrl.endsWith('/') ? baseUrl : '$baseUrl/',
@@ -65,15 +65,34 @@ class OcrApiService {
 
   /// Upload one image to /process. method defaults to "hybrid".
   Future<OcrProcessResult> processImage(XFile img, {String method = 'hybrid'}) async {
-    final form = FormData.fromMap({
-      'method': method,
-      'image': await MultipartFile.fromFile(img.path, filename: img.name),
-    });
+    try {
+      final form = FormData.fromMap({
+        'method': method,
+        'image': await MultipartFile.fromFile(img.path, filename: img.name),
+      });
 
-    final resp = await _dio.post('process', data: form);
-    return OcrProcessResult.fromJson(resp.data as Map<String, dynamic>);
+      final response = await _dio.post('process', data: form);
+
+      if (response.statusCode == 200) {
+        return OcrProcessResult.fromJson(response.data as Map<String, dynamic>);
+      } else {
+        return OcrProcessResult(
+          success: false,
+          error: 'Server error: ${response.statusCode}',
+        );
+      }
+    } on DioException catch (e) {
+      // Handle Dio errors (network, timeout, etc.)
+      String errorMsg = 'Network error: ${e.message}';
+      if (e.response != null) {
+        errorMsg = 'Server error: ${e.response?.statusCode} - ${e.response?.statusMessage}';
+      }
+      return OcrProcessResult(success: false, error: errorMsg);
+    } catch (e) {
+      // Handle other errors
+      return OcrProcessResult(success: false, error: 'Unexpected error: $e');
+    }
   }
-
   /// Quick helper to validate base64 (optional to use in UI)
   static bool isValidBase64(String? s) {
     if (s == null || s.isEmpty) return false;

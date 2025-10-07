@@ -44,7 +44,7 @@ class OCRService {
   }) async {
     try {
       final base64Image = await imageToBase64(imageFile);
-
+print("Hello");
       final response = await http.post(
         Uri.parse('$baseUrl/api/process/single'),
         headers: {'Content-Type': 'application/json'},
@@ -56,6 +56,7 @@ class OCRService {
       );
 
       if (response.statusCode == 200) {
+        print('response: ${response.body}');
         return jsonDecode(response.body);
       } else {
         throw Exception(
