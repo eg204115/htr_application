@@ -639,7 +639,7 @@ class _HomeScreenState extends State<HomeScreen> {
       setState(() => _recognizedText = combinedText.trim());
 
       // Show final success message if we processed any images successfully
-      if (_selectedImages.isNotEmpty && _recognizedText.isNotEmpty && !_recognizedText.contains('ERROR')) {
+      if (_selectedImages.isNotEmpty && _recognizedText.isNotEmpty && !_recognizedText.contains('Failed')) {
         print('🎉 Transcription completed successfully!');
         _showSuccessSnackBar('Transcription completed successfully!');
       } else {
