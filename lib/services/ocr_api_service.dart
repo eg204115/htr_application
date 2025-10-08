@@ -1,7 +1,7 @@
-// lib/services/ocr_api_service.dart
 import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:file_picker/file_picker.dart';
 
 class OcrProcessResult {
   final bool success;
@@ -29,13 +29,48 @@ class OcrProcessResult {
   }
 }
 
+class ConvertHandwrittenResult {
+  final bool success;
+  final String? error;
+  final String? text; // Extracted text
+  final double? confidence; // Confidence score
+  final String? filename;
+
+  ConvertHandwrittenResult({
+    required this.success,
+    this.error,
+    this.text,
+    this.confidence,
+    this.filename,
+  });
+
+  factory ConvertHandwrittenResult.fromJson(Map<String, dynamic> j) {
+    return ConvertHandwrittenResult(
+      success: j['success'] == true,
+      error: j['error'] as String?,
+      text: j['text'] as String?,
+      confidence: (j['confidence'] is num) ? (j['confidence'] as num).toDouble() : null,
+      filename: j['filename'] as String?,
+    );
+  }
+}
+
+
 class OcrHealth {
   final String status;
   final bool trocrAvailable;
-  OcrHealth({required this.status, required this.trocrAvailable});
+  final bool handwritingConverterAvailable;
+
+  OcrHealth({
+    required this.status,
+    required this.trocrAvailable,
+    required this.handwritingConverterAvailable,
+  });
+
   factory OcrHealth.fromJson(Map<String, dynamic> j) => OcrHealth(
     status: (j['status'] ?? '').toString(),
     trocrAvailable: (j['trocr_available'] == true),
+    handwritingConverterAvailable: (j['handwriting_converter_available'] == true),
   );
 }
 
@@ -48,7 +83,7 @@ class OcrApiService {
     required String baseUrl,
     String? apiKey, // optional Bearer token if you enabled auth
     Duration connectTimeout = const Duration(seconds: 10),
-    Duration receiveTimeout = const Duration(seconds: 200),
+    Duration receiveTimeout = const Duration(seconds: 6000),
   }) : _dio = Dio(
     BaseOptions(
       baseUrl: baseUrl.endsWith('/') ? baseUrl : '$baseUrl/',
@@ -93,6 +128,64 @@ class OcrApiService {
       return OcrProcessResult(success: false, error: 'Unexpected error: $e');
     }
   }
+
+  /// Convert PDF or image to text PDF using /convert-handwritten endpoint
+  Future<ConvertHandwrittenResult> convertHandwritten(PlatformFile file) async {
+    try {
+      final form = FormData.fromMap({
+        'file': await MultipartFile.fromFile(file.path!, filename: file.name),
+      });
+
+      final response = await _dio.post(
+        'convert-handwritten',
+        data: form,
+      );
+
+      if (response.statusCode == 200) {
+        // Parse JSON response
+        final responseData = response.data;
+        print('📊 Convert handwritten response type: ${responseData.runtimeType}');
+        print('📊 Convert handwritten response: $responseData');
+
+        if (responseData is Map<String, dynamic>) {
+          return ConvertHandwrittenResult.fromJson(responseData);
+        } else {
+          return ConvertHandwrittenResult(
+            success: false,
+            error: 'Invalid response format from server',
+          );
+        }
+      } else {
+        return ConvertHandwrittenResult(
+          success: false,
+          error: 'Server error: ${response.statusCode}',
+        );
+      }
+    } on DioException catch (e) {
+      String errorMsg = 'Network error: ${e.message}';
+      if (e.response != null) {
+        try {
+          final errorData = e.response?.data;
+          print('❌ Dio error response: $errorData');
+          if (errorData is Map && errorData['error'] != null) {
+            errorMsg = errorData['error'].toString();
+          } else if (errorData is String) {
+            errorMsg = errorData;
+          } else {
+            errorMsg = 'Server error: ${e.response?.statusCode}';
+          }
+        } catch (_) {
+          errorMsg = 'Server error: ${e.response?.statusCode}';
+        }
+      }
+      return ConvertHandwrittenResult(success: false, error: errorMsg);
+    } catch (e) {
+      print('❌ Unexpected error in convertHandwritten: $e');
+      return ConvertHandwrittenResult(success: false, error: 'Unexpected error: $e');
+    }
+  }
+
+
   /// Quick helper to validate base64 (optional to use in UI)
   static bool isValidBase64(String? s) {
     if (s == null || s.isEmpty) return false;

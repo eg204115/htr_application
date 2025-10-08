@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:file_picker/file_picker.dart';
+import 'dart:io';
+import 'package:path_provider/path_provider.dart';
+import 'package:permission_handler/permission_handler.dart';
 import '../constants/colors.dart';
 import 'camera_screen.dart';
 import '../widgets/recognition_result.dart';
@@ -14,14 +17,17 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   // ====== NEW: configure your API here ======
-  static const String _apiBaseUrl = 'http://192.168.43.231:5000'; // Android emulator -> host machine
+  static const String _apiBaseUrl =
+      'http://192.168.43.231:5000'; // Android emulator -> host machine
   // If you enabled Bearer auth on the server, put it here (or pass null if not used)
   static const String? _apiKey = null;
   // ==========================================
 
   final ImagePicker _picker = ImagePicker();
-  final OcrApiService _ocrService =
-  OcrApiService(baseUrl: _apiBaseUrl, apiKey: _apiKey);
+  final OcrApiService _ocrService = OcrApiService(
+    baseUrl: _apiBaseUrl,
+    apiKey: _apiKey,
+  );
 
   List<XFile> _selectedImages = [];
   List<PlatformFile> _selectedDocuments = [];
@@ -186,60 +192,90 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildCameraButton() {
     return ElevatedButton.icon(
       icon: Icon(Icons.camera_alt, size: 20.w, color: AppColors.primaryWhite),
-      label: Text('Camera', style: TextStyle(fontSize: 14.sp, color: AppColors.primaryWhite)),
+      label: Text(
+        'Camera',
+        style: TextStyle(fontSize: 14.sp, color: AppColors.primaryWhite),
+      ),
       onPressed: _openCamera,
       style: ElevatedButton.styleFrom(
         backgroundColor: AppColors.buttonPrimary,
         foregroundColor: AppColors.primaryWhite,
         padding: EdgeInsets.symmetric(vertical: 16.h, horizontal: 12.w),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12.r),
+        ),
       ),
     );
   }
 
   Widget _buildGalleryButton() {
     return ElevatedButton.icon(
-      icon: Icon(Icons.photo_library, size: 20.w, color: AppColors.primaryWhite),
-      label: Text('Gallery', style: TextStyle(fontSize: 14.sp, color: AppColors.primaryWhite)),
+      icon: Icon(
+        Icons.photo_library,
+        size: 20.w,
+        color: AppColors.primaryWhite,
+      ),
+      label: Text(
+        'Gallery',
+        style: TextStyle(fontSize: 14.sp, color: AppColors.primaryWhite),
+      ),
       onPressed: _pickFromGallery,
       style: ElevatedButton.styleFrom(
         backgroundColor: AppColors.buttonSecondary,
         foregroundColor: AppColors.primaryWhite,
         padding: EdgeInsets.symmetric(vertical: 16.h, horizontal: 12.w),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12.r),
+        ),
       ),
     );
   }
 
   Widget _buildDocumentButton() {
     return ElevatedButton.icon(
-      icon: Icon(Icons.insert_drive_file, size: 20.w, color: AppColors.primaryWhite),
-      label: Text('Documents', style: TextStyle(fontSize: 14.sp, color: AppColors.primaryWhite)),
+      icon: Icon(
+        Icons.insert_drive_file,
+        size: 20.w,
+        color: AppColors.primaryWhite,
+      ),
+      label: Text(
+        'Documents',
+        style: TextStyle(fontSize: 14.sp, color: AppColors.primaryWhite),
+      ),
       onPressed: _pickDocuments,
       style: ElevatedButton.styleFrom(
         backgroundColor: AppColors.info,
         foregroundColor: AppColors.primaryWhite,
         padding: EdgeInsets.symmetric(vertical: 16.h, horizontal: 12.w),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12.r),
+        ),
       ),
     );
   }
 
   Widget _buildSelectedFilesPreview() {
-    final hasFiles = _selectedImages.isNotEmpty || _selectedDocuments.isNotEmpty;
+    final hasFiles =
+        _selectedImages.isNotEmpty || _selectedDocuments.isNotEmpty;
     if (!hasFiles) {
       return Container(
         padding: EdgeInsets.all(24.w),
         decoration: BoxDecoration(
           color: AppColors.backgroundWhite,
           borderRadius: BorderRadius.circular(16.r),
-          border: Border.all(color: AppColors.borderLight, style: BorderStyle.solid),
+          border: Border.all(
+            color: AppColors.borderLight,
+            style: BorderStyle.solid,
+          ),
         ),
         child: Column(
           children: [
             Icon(Icons.folder_open, size: 48.w, color: AppColors.textLight),
             SizedBox(height: 12.h),
-            Text('No files selected', style: TextStyle(fontSize: 16.sp, color: AppColors.textSecondary)),
+            Text(
+              'No files selected',
+              style: TextStyle(fontSize: 16.sp, color: AppColors.textSecondary),
+            ),
             SizedBox(height: 8.h),
             Text(
               'Use the buttons above to add images or documents',
@@ -258,8 +294,14 @@ class _HomeScreenState extends State<HomeScreen> {
           children: [
             Icon(Icons.attachment, color: AppColors.iconPrimary, size: 20.w),
             SizedBox(width: 8.w),
-            Text('Selected Files',
-                style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+            Text(
+              'Selected Files',
+              style: TextStyle(
+                fontSize: 18.sp,
+                fontWeight: FontWeight.bold,
+                color: AppColors.textPrimary,
+              ),
+            ),
             SizedBox(width: 8.w),
             Container(
               padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
@@ -269,7 +311,11 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               child: Text(
                 '${_selectedImages.length + _selectedDocuments.length}',
-                style: TextStyle(fontSize: 12.sp, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                style: TextStyle(
+                  fontSize: 12.sp,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textPrimary,
+                ),
               ),
             ),
           ],
@@ -284,7 +330,7 @@ class _HomeScreenState extends State<HomeScreen> {
     return Column(
       children: [
         ..._selectedImages.asMap().entries.map(
-              (entry) => _buildFileItem(
+          (entry) => _buildFileItem(
             entry.value.name,
             Icons.photo,
             AppColors.success,
@@ -293,7 +339,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ),
         ..._selectedDocuments.asMap().entries.map(
-              (entry) => _buildFileItem(
+          (entry) => _buildFileItem(
             entry.value.name,
             _getDocumentIcon(entry.value.extension),
             AppColors.info,
@@ -306,12 +352,24 @@ class _HomeScreenState extends State<HomeScreen> {
           children: [
             Expanded(
               child: OutlinedButton.icon(
-                icon: Icon(Icons.add, size: 18.w, color: AppColors.buttonPrimary),
-                label: Text('Add More Files', style: TextStyle(color: AppColors.buttonPrimary)),
+                icon: Icon(
+                  Icons.add,
+                  size: 18.w,
+                  color: AppColors.buttonPrimary,
+                ),
+                label: Text(
+                  'Add More Files',
+                  style: TextStyle(color: AppColors.buttonPrimary),
+                ),
                 onPressed: _showFileSourceDialog,
                 style: OutlinedButton.styleFrom(
-                  padding: EdgeInsets.symmetric(vertical: 14.h, horizontal: 16.w),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.r)),
+                  padding: EdgeInsets.symmetric(
+                    vertical: 14.h,
+                    horizontal: 16.w,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8.r),
+                  ),
                   side: BorderSide(color: AppColors.buttonPrimary),
                 ),
               ),
@@ -319,14 +377,26 @@ class _HomeScreenState extends State<HomeScreen> {
             SizedBox(width: 12.w),
             Expanded(
               child: ElevatedButton.icon(
-                icon: Icon(Icons.delete, size: 18.w, color: AppColors.primaryWhite),
-                label: Text('Clear All', style: TextStyle(color: AppColors.primaryWhite)),
+                icon: Icon(
+                  Icons.delete,
+                  size: 18.w,
+                  color: AppColors.primaryWhite,
+                ),
+                label: Text(
+                  'Clear All',
+                  style: TextStyle(color: AppColors.primaryWhite),
+                ),
                 onPressed: _clearAllFiles,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.buttonDanger,
                   foregroundColor: AppColors.primaryWhite,
-                  padding: EdgeInsets.symmetric(vertical: 14.h, horizontal: 16.w),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.r)),
+                  padding: EdgeInsets.symmetric(
+                    vertical: 14.h,
+                    horizontal: 16.w,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8.r),
+                  ),
                 ),
               ),
             ),
@@ -337,12 +407,12 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildFileItem(
-      String fileName,
-      IconData icon,
-      Color color,
-      int index, {
-        required bool isImage,
-      }) {
+    String fileName,
+    IconData icon,
+    Color color,
+    int index, {
+    required bool isImage,
+  }) {
     return Container(
       margin: EdgeInsets.only(bottom: 12.h),
       padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
@@ -350,7 +420,13 @@ class _HomeScreenState extends State<HomeScreen> {
         color: AppColors.backgroundWhite,
         borderRadius: BorderRadius.circular(12.r),
         border: Border.all(color: AppColors.borderLight),
-        boxShadow: [BoxShadow(color: AppColors.shadowLight, blurRadius: 4.r, offset: Offset(0, 2.h))],
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.shadowLight,
+            blurRadius: 4.r,
+            offset: Offset(0, 2.h),
+          ),
+        ],
       ),
       child: Row(
         children: [
@@ -367,11 +443,20 @@ class _HomeScreenState extends State<HomeScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(fileName,
-                    style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w500, color: AppColors.textPrimary),
-                    overflow: TextOverflow.ellipsis),
+                Text(
+                  fileName,
+                  style: TextStyle(
+                    fontSize: 14.sp,
+                    fontWeight: FontWeight.w500,
+                    color: AppColors.textPrimary,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
                 SizedBox(height: 4.h),
-                Text(isImage ? 'Image' : 'Document', style: TextStyle(fontSize: 12.sp, color: AppColors.textLight)),
+                Text(
+                  isImage ? 'Image' : 'Document',
+                  style: TextStyle(fontSize: 12.sp, color: AppColors.textLight),
+                ),
               ],
             ),
           ),
@@ -395,7 +480,7 @@ class _HomeScreenState extends State<HomeScreen> {
           child: ElevatedButton.icon(
             icon: Icon(Icons.text_fields, size: 24.w, color: AppColors.primaryWhite),
             label: Text(
-              'Transcribe All Files',
+              'Extract Text from Files', // Updated text
               style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.bold, color: AppColors.primaryWhite),
             ),
             onPressed: _transcribeAllFiles,
@@ -410,11 +495,12 @@ class _HomeScreenState extends State<HomeScreen> {
       ],
     );
   }
-
   Future<void> _openCamera() async {
     final result = await Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => CameraScreen(existingImages: _selectedImages)),
+      MaterialPageRoute(
+        builder: (context) => CameraScreen(existingImages: _selectedImages),
+      ),
     );
     if (result != null && result is List<XFile>) {
       setState(() {
@@ -463,24 +549,44 @@ class _HomeScreenState extends State<HomeScreen> {
   void _showFileSourceDialog() {
     showModalBottomSheet(
       context: context,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20.r))),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
+      ),
       builder: (context) => Padding(
         padding: EdgeInsets.all(20.w),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text('Select File Source', style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold)),
+            Text(
+              'Select File Source',
+              style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold),
+            ),
             SizedBox(height: 20.h),
-            _buildSourceOption(Icons.camera_alt, 'Take Photos', 'Capture new images with camera', _openCamera),
             _buildSourceOption(
-                Icons.photo_library, 'Choose from Gallery', 'Select images from your gallery', _pickFromGallery),
+              Icons.camera_alt,
+              'Take Photos',
+              'Capture new images with camera',
+              _openCamera,
+            ),
             _buildSourceOption(
-                Icons.insert_drive_file, 'Upload Documents', 'PDF, Word, or text files', _pickDocuments),
+              Icons.photo_library,
+              'Choose from Gallery',
+              'Select images from your gallery',
+              _pickFromGallery,
+            ),
+            _buildSourceOption(
+              Icons.insert_drive_file,
+              'Upload Documents',
+              'PDF, Word, or text files',
+              _pickDocuments,
+            ),
             SizedBox(height: 20.h),
             OutlinedButton(
               onPressed: () => Navigator.pop(context),
               child: Text('Cancel'),
-              style: OutlinedButton.styleFrom(padding: EdgeInsets.symmetric(vertical: 12.h, horizontal: 32.w)),
+              style: OutlinedButton.styleFrom(
+                padding: EdgeInsets.symmetric(vertical: 12.h, horizontal: 32.w),
+              ),
             ),
           ],
         ),
@@ -488,7 +594,12 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildSourceOption(IconData icon, String title, String subtitle, VoidCallback onTap) {
+  Widget _buildSourceOption(
+    IconData icon,
+    String title,
+    String subtitle,
+    VoidCallback onTap,
+  ) {
     return ListTile(
       leading: Container(
         padding: EdgeInsets.all(12.w),
@@ -498,8 +609,14 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
         child: Icon(icon, color: AppColors.primaryBlue),
       ),
-      title: Text(title, style: TextStyle(fontSize: 16.sp, color: AppColors.textPrimary)),
-      subtitle: Text(subtitle, style: TextStyle(fontSize: 12.sp, color: AppColors.textLight)),
+      title: Text(
+        title,
+        style: TextStyle(fontSize: 16.sp, color: AppColors.textPrimary),
+      ),
+      subtitle: Text(
+        subtitle,
+        style: TextStyle(fontSize: 12.sp, color: AppColors.textLight),
+      ),
       onTap: () {
         Navigator.pop(context);
         onTap();
@@ -552,7 +669,9 @@ class _HomeScreenState extends State<HomeScreen> {
       try {
         print('🩺 Performing health check...');
         final health = await _ocrService.health();
-        print('✅ Health check response: ${health.status}, TrOCR available: ${health.trocrAvailable}');
+        print(
+          '✅ Health check response: ${health.status}, TrOCR available: ${health.trocrAvailable}',
+        );
 
         if (health.status.toLowerCase() != 'healthy') {
           _showErrorSnackBar('Server not healthy');
@@ -572,12 +691,15 @@ class _HomeScreenState extends State<HomeScreen> {
       for (int i = 0; i < _selectedImages.length; i++) {
         final image = _selectedImages[i];
 
-        print('🖼️ Processing image ${i + 1}/${_selectedImages.length}: ${image.name}');
+        print(
+          '🖼️ Processing image ${i + 1}/${_selectedImages.length}: ${image.name}',
+        );
 
-        // Show progress for multiple images
-        if (_selectedImages.length > 1) {
+        // Show progress for multiple files
+        if (_selectedImages.length + _selectedDocuments.length > 1) {
           setState(() {
-            _recognizedText = 'Processing image ${i + 1} of ${_selectedImages.length}...\n$combinedText';
+            _recognizedText =
+                'Processing image ${i + 1} of ${_selectedImages.length}...\n$combinedText';
           });
         }
 
@@ -589,7 +711,6 @@ class _HomeScreenState extends State<HomeScreen> {
         print('   - Text length: ${result.text?.length ?? 0}');
         print('   - Confidence: ${result.confidence}');
         print('   - Error: ${result.error}');
-        print('   - Has processed image: ${result.processedImageBase64 != null && result.processedImageBase64!.isNotEmpty}');
 
         if (result.success && result.text != null && result.text!.isNotEmpty) {
           final txt = result.text!.trim();
@@ -600,23 +721,23 @@ class _HomeScreenState extends State<HomeScreen> {
           print('   Confidence: $conf');
 
           // Format the output nicely
-          if (_selectedImages.length > 1) {
+          if (_selectedImages.length + _selectedDocuments.length > 1) {
             combinedText += '📷 ${image.name}\n';
             combinedText += 'Confidence: $conf\n';
             combinedText += '$txt\n\n${'-' * 40}\n\n';
           } else {
-            combinedText = txt; // Just show the text directly for single image
+            combinedText = txt; // Just show the text directly for single file
           }
 
           // Show success message for each image
-          if (_selectedImages.length > 1) {
+          if (_selectedImages.length + _selectedDocuments.length > 1) {
             _showSuccessSnackBar('Processed ${image.name} successfully');
           }
         } else {
           final errorMsg = result.error ?? 'Unknown error occurred';
           print('❌ Failed to process ${image.name}: $errorMsg');
 
-          if (_selectedImages.length > 1) {
+          if (_selectedImages.length + _selectedDocuments.length > 1) {
             combinedText += '📷 ${image.name}\n';
             combinedText += 'ERROR: $errorMsg\n\n${'-' * 40}\n\n';
           } else {
@@ -626,35 +747,161 @@ class _HomeScreenState extends State<HomeScreen> {
         }
       }
 
-      // 3) Handle documents (show warning since Flask only processes images)
-      if (_selectedDocuments.isNotEmpty) {
-        print('📄 Documents selected but not processed: ${_selectedDocuments.length}');
-        final docWarning = '\n\n⚠ Note: ${_selectedDocuments.length} document(s) were selected but only images can be processed by the current API.';
-        combinedText += docWarning;
-        _showInfoSnackBar('Documents are not supported for OCR processing');
-      }
+      // 3) Process PDFs through /convert-handwritten endpoint
+      // 3) Process PDFs through /convert-handwritten endpoint
+      for (int i = 0; i < _selectedDocuments.length; i++) {
+        final document = _selectedDocuments[i];
 
+        // Check if it's a PDF
+        if (document.extension?.toLowerCase() == 'pdf') {
+          print('📄 Processing PDF ${i + 1}/${_selectedDocuments.length}: ${document.name}');
+
+          // Show progress for multiple files
+          if (_selectedImages.length + _selectedDocuments.length > 1) {
+            setState(() {
+              _recognizedText = 'Processing PDF ${i + 1} of ${_selectedDocuments.length}...\n$combinedText';
+            });
+          }
+
+          final result = await _ocrService.convertHandwritten(document);
+
+          print('📡 Convert Handwritten API Response for ${document.name}:');
+          print('   - Success: ${result.success}');
+          print('   - Error: ${result.error}');
+          print('   - Text received: ${result.text?.length ?? 0} characters');
+          print('   - Confidence: ${result.confidence}');
+
+          if (result.success && result.text != null && result.text!.isNotEmpty) {
+            final txt = result.text!.trim();
+            final conf = result.confidence?.toStringAsFixed(3) ?? 'N/A';
+
+            print('✅ Successfully processed PDF ${document.name}');
+            print('   Extracted text length: ${txt.length}');
+            print('   Confidence: $conf');
+
+            // Format the output nicely
+            if (_selectedImages.length + _selectedDocuments.length > 1) {
+              combinedText += '📄 ${document.name} (PDF)\n';
+              combinedText += 'Confidence: $conf\n';
+              combinedText += '$txt\n\n${'-' * 40}\n\n';
+            } else {
+              combinedText = txt; // Just show the text directly for single file
+            }
+
+            _showSuccessSnackBar('PDF ${document.name} processed successfully! Text extracted.');
+          } else {
+            final errorMsg = result.error ?? 'Unknown error occurred';
+            print('❌ Failed to process PDF ${document.name}: $errorMsg');
+
+            if (_selectedImages.length + _selectedDocuments.length > 1) {
+              combinedText += '📄 ${document.name} (PDF)\n';
+              combinedText += 'ERROR: $errorMsg\n\n${'-' * 40}\n\n';
+            } else {
+              combinedText = 'Error processing PDF: $errorMsg';
+            }
+            _showErrorSnackBar('Failed to process PDF ${document.name}: $errorMsg');
+          }
+        } else {
+          // Handle non-PDF documents
+          print('⚠ Skipping non-PDF document: ${document.name}');
+          if (_selectedImages.length + _selectedDocuments.length > 1) {
+            combinedText += '📄 ${document.name}\n';
+            combinedText += '⚠ Only PDF documents are supported for text extraction\n\n${'-' * 40}\n\n';
+          } else {
+            combinedText = 'Only PDF documents are supported for text extraction';
+          }
+          _showInfoSnackBar('Only PDF documents are supported for text extraction');
+        }
+      }
       // Update the final text
       print('📝 Final combined text length: ${combinedText.length}');
       setState(() => _recognizedText = combinedText.trim());
 
-      // Show final success message if we processed any images successfully
-      if (_selectedImages.isNotEmpty && _recognizedText.isNotEmpty && !_recognizedText.contains('Failed')) {
-        print('🎉 Transcription completed successfully!');
-        _showSuccessSnackBar('Transcription completed successfully!');
-      } else {
-        print('⚠ Transcription completed with warnings or no text extracted');
-      }
+      // Show final success message if we processed any files successfully
+      final hasSuccessfulProcessing =
+          (_selectedImages.isNotEmpty &&
+              _recognizedText.isNotEmpty &&
+              !_recognizedText.contains('Failed')) ||
+          (_selectedDocuments.isNotEmpty &&
+              _recognizedText.contains('successfully'));
 
+      if (hasSuccessfulProcessing) {
+        print('🎉 Processing completed successfully!');
+        _showSuccessSnackBar('Processing completed successfully!');
+      } else {
+        print('⚠ Processing completed with warnings or no files processed');
+      }
     } catch (e) {
-      print('💥 Transcription failed with exception: $e');
+      print('💥 Processing failed with exception: $e');
       print('Stack trace: ${e.toString()}');
-      final errorMsg = 'Transcription failed: $e';
+      final errorMsg = 'Processing failed: $e';
       setState(() => _recognizedText = errorMsg);
       _showErrorSnackBar(errorMsg);
     } finally {
-      print('🔚 Transcription process finished');
+      print('🔚 Processing finished');
       setState(() => _isProcessing = false);
+    }
+  }
+
+  Future<void> _savePdfFile(List<int> pdfBytes, String originalFileName) async {
+    try {
+      // Request storage permission
+      var status = await Permission.storage.status;
+      if (!status.isGranted) {
+        status = await Permission.storage.request();
+      }
+
+      if (status.isGranted) {
+        // Get downloads directory
+        final directory = await getDownloadsDirectory();
+        if (directory != null) {
+          // Create filename
+          String timestamp = DateTime.now().millisecondsSinceEpoch.toString();
+          String baseName = originalFileName.replaceAll('.pdf', '');
+          String fileName = 'converted_${baseName}_$timestamp.pdf';
+
+          // Save file
+          final file = File('${directory.path}/$fileName');
+          await file.writeAsBytes(pdfBytes);
+
+          print('✅ PDF saved to: ${file.path}');
+          _showSuccessSnackBar('PDF saved to Downloads: $fileName');
+        } else {
+          throw Exception('Could not access downloads directory');
+        }
+      } else {
+        throw Exception('Storage permission denied');
+      }
+    } catch (e) {
+      print('❌ Error saving PDF: $e');
+      _showErrorSnackBar('Failed to save PDF: $e');
+
+      // Fallback: Let user choose where to save
+      await _savePdfWithFilePicker(pdfBytes, originalFileName);
+    }
+  }
+
+  // Fallback method using file_picker
+  Future<void> _savePdfWithFilePicker(
+    List<int> pdfBytes,
+    String originalFileName,
+  ) async {
+    try {
+      String? outputFile = await FilePicker.platform.saveFile(
+        dialogTitle: 'Save Converted PDF',
+        fileName: 'converted_$originalFileName',
+        type: FileType.custom,
+        allowedExtensions: ['pdf'],
+      );
+
+      if (outputFile != null) {
+        final file = File(outputFile);
+        await file.writeAsBytes(pdfBytes);
+        _showSuccessSnackBar('PDF saved to: ${file.path}');
+      }
+    } catch (e) {
+      print('❌ Error saving PDF with file picker: $e');
+      _showErrorSnackBar('Failed to save PDF. Please try again.');
     }
   }
 
@@ -673,7 +920,10 @@ class _HomeScreenState extends State<HomeScreen> {
   void _showSuccessSnackBar(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(message, style: TextStyle(fontSize: 14.sp, color: AppColors.primaryWhite)),
+        content: Text(
+          message,
+          style: TextStyle(fontSize: 14.sp, color: AppColors.primaryWhite),
+        ),
         backgroundColor: Colors.green,
         behavior: SnackBarBehavior.floating,
         margin: EdgeInsets.all(16.w),
@@ -686,7 +936,10 @@ class _HomeScreenState extends State<HomeScreen> {
   void _showInfoSnackBar(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(message, style: TextStyle(fontSize: 14.sp, color: AppColors.primaryWhite)),
+        content: Text(
+          message,
+          style: TextStyle(fontSize: 14.sp, color: AppColors.primaryWhite),
+        ),
         backgroundColor: Colors.blue,
         behavior: SnackBarBehavior.floating,
         margin: EdgeInsets.all(16.w),
