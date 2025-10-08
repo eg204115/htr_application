@@ -471,30 +471,42 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildActionButtons() {
-    final hasFiles = _selectedImages.isNotEmpty || _selectedDocuments.isNotEmpty;
+    final hasFiles =
+        _selectedImages.isNotEmpty || _selectedDocuments.isNotEmpty;
     if (!hasFiles) return SizedBox();
 
     return Row(
       children: [
         Expanded(
           child: ElevatedButton.icon(
-            icon: Icon(Icons.text_fields, size: 24.w, color: AppColors.primaryWhite),
+            icon: Icon(
+              Icons.text_fields,
+              size: 24.w,
+              color: AppColors.primaryWhite,
+            ),
             label: Text(
               'Extract Text from Files', // Updated text
-              style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.bold, color: AppColors.primaryWhite),
+              style: TextStyle(
+                fontSize: 16.sp,
+                fontWeight: FontWeight.bold,
+                color: AppColors.primaryWhite,
+              ),
             ),
             onPressed: _transcribeAllFiles,
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.buttonPrimary,
               foregroundColor: AppColors.primaryWhite,
               padding: EdgeInsets.symmetric(vertical: 18.h, horizontal: 16.w),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12.r),
+              ),
             ),
           ),
         ),
       ],
     );
   }
+
   Future<void> _openCamera() async {
     final result = await Navigator.push(
       context,
@@ -687,147 +699,131 @@ class _HomeScreenState extends State<HomeScreen> {
 
       String combinedText = '';
 
-      // 2) Process images through /process endpoint
-      for (int i = 0; i < _selectedImages.length; i++) {
-        final image = _selectedImages[i];
-
+      // 2) Check if we have multiple images - send them to convert-handwritten
+      if (_selectedImages.length > 1) {
         print(
-          '🖼️ Processing image ${i + 1}/${_selectedImages.length}: ${image.name}',
+          '🖼️ Processing ${_selectedImages.length} images via convert-handwritten endpoint',
         );
 
-        // Show progress for multiple files
-        if (_selectedImages.length + _selectedDocuments.length > 1) {
-          setState(() {
-            _recognizedText =
-                'Processing image ${i + 1} of ${_selectedImages.length}...\n$combinedText';
-          });
+        // Convert XFile to PlatformFile for API compatibility
+        List<PlatformFile> imageFiles = [];
+        for (var image in _selectedImages) {
+          imageFiles.add(
+            PlatformFile(
+              name: image.name,
+              path: image.path,
+              size: await File(image.path).length(),
+            ),
+          );
         }
 
-        final result = await _ocrService.processImage(image, method: 'hybrid');
+        final result = await _ocrService.convertHandwritten(imageFiles);
 
-        // Debug log the full response
-        print('📡 API Response for ${image.name}:');
+        print(
+          '📡 Convert Handwritten API Response for ${_selectedImages.length} images:',
+        );
         print('   - Success: ${result.success}');
-        print('   - Text length: ${result.text?.length ?? 0}');
-        print('   - Confidence: ${result.confidence}');
+        print('   - Processed: ${result.processedCount}/${result.totalCount}');
+        print('   - Overall Confidence: ${result.overallConfidence}');
         print('   - Error: ${result.error}');
+
+        if (result.success &&
+            result.combinedText != null &&
+            result.combinedText!.isNotEmpty) {
+          print('✅ Successfully processed ${result.processedCount} images');
+          combinedText = result.combinedText!;
+          _showSuccessSnackBar(
+            'Processed ${result.processedCount}/${result.totalCount} images successfully!',
+          );
+        } else {
+          final errorMsg = result.error ?? 'Unknown error occurred';
+          print('❌ Failed to process images: $errorMsg');
+          combinedText = 'Error processing images: $errorMsg';
+          _showErrorSnackBar('Failed to process images: $errorMsg');
+        }
+      }
+      // 3) Process single images through /process endpoint (backward compatibility)
+      else if (_selectedImages.length == 1) {
+        final image = _selectedImages[0];
+        print(
+          '🖼️ Processing single image via /process endpoint: ${image.name}',
+        );
+
+        final result = await _ocrService.processImage(image, method: 'hybrid');
 
         if (result.success && result.text != null && result.text!.isNotEmpty) {
           final txt = result.text!.trim();
           final conf = result.confidence?.toStringAsFixed(3) ?? 'N/A';
 
           print('✅ Successfully processed ${image.name}');
-          print('   Extracted text: "$txt"');
-          print('   Confidence: $conf');
-
-          // Format the output nicely
-          if (_selectedImages.length + _selectedDocuments.length > 1) {
-            combinedText += '📷 ${image.name}\n';
-            combinedText += 'Confidence: $conf\n';
-            combinedText += '$txt\n\n${'-' * 40}\n\n';
-          } else {
-            combinedText = txt; // Just show the text directly for single file
-          }
-
-          // Show success message for each image
-          if (_selectedImages.length + _selectedDocuments.length > 1) {
-            _showSuccessSnackBar('Processed ${image.name} successfully');
-          }
+          combinedText = '📷 ${image.name}\nConfidence: $conf\n$txt';
+          _showSuccessSnackBar('Processed ${image.name} successfully');
         } else {
           final errorMsg = result.error ?? 'Unknown error occurred';
           print('❌ Failed to process ${image.name}: $errorMsg');
-
-          if (_selectedImages.length + _selectedDocuments.length > 1) {
-            combinedText += '📷 ${image.name}\n';
-            combinedText += 'ERROR: $errorMsg\n\n${'-' * 40}\n\n';
-          } else {
-            combinedText = 'Error processing image: $errorMsg';
-          }
+          combinedText = 'Error processing image: $errorMsg';
           _showErrorSnackBar('Failed to process ${image.name}: $errorMsg');
         }
       }
 
-      // 3) Process PDFs through /convert-handwritten endpoint
-      // 3) Process PDFs through /convert-handwritten endpoint
-      for (int i = 0; i < _selectedDocuments.length; i++) {
-        final document = _selectedDocuments[i];
+      // 4) Process PDFs through /convert-handwritten endpoint
+      if (_selectedDocuments.isNotEmpty) {
+        print(
+          '📄 Processing ${_selectedDocuments.length} PDFs via convert-handwritten endpoint',
+        );
 
-        // Check if it's a PDF
-        if (document.extension?.toLowerCase() == 'pdf') {
-          print('📄 Processing PDF ${i + 1}/${_selectedDocuments.length}: ${document.name}');
+        final result = await _ocrService.convertHandwritten(_selectedDocuments);
 
-          // Show progress for multiple files
-          if (_selectedImages.length + _selectedDocuments.length > 1) {
-            setState(() {
-              _recognizedText = 'Processing PDF ${i + 1} of ${_selectedDocuments.length}...\n$combinedText';
-            });
-          }
+        print(
+          '📡 Convert Handwritten API Response for ${_selectedDocuments.length} PDFs:',
+        );
+        print('   - Success: ${result.success}');
+        print('   - Processed: ${result.processedCount}/${result.totalCount}');
+        print('   - Overall Confidence: ${result.overallConfidence}');
+        print('   - Error: ${result.error}');
 
-          final result = await _ocrService.convertHandwritten(document);
+        if (result.success &&
+            result.combinedText != null &&
+            result.combinedText!.isNotEmpty) {
+          print('✅ Successfully processed ${result.processedCount} PDFs');
 
-          print('📡 Convert Handwritten API Response for ${document.name}:');
-          print('   - Success: ${result.success}');
-          print('   - Error: ${result.error}');
-          print('   - Text received: ${result.text?.length ?? 0} characters');
-          print('   - Confidence: ${result.confidence}');
-
-          if (result.success && result.text != null && result.text!.isNotEmpty) {
-            final txt = result.text!.trim();
-            final conf = result.confidence?.toStringAsFixed(3) ?? 'N/A';
-
-            print('✅ Successfully processed PDF ${document.name}');
-            print('   Extracted text length: ${txt.length}');
-            print('   Confidence: $conf');
-
-            // Format the output nicely
-            if (_selectedImages.length + _selectedDocuments.length > 1) {
-              combinedText += '📄 ${document.name} (PDF)\n';
-              combinedText += 'Confidence: $conf\n';
-              combinedText += '$txt\n\n${'-' * 40}\n\n';
-            } else {
-              combinedText = txt; // Just show the text directly for single file
-            }
-
-            _showSuccessSnackBar('PDF ${document.name} processed successfully! Text extracted.');
+          // Append PDF results to existing text
+          if (combinedText.isNotEmpty) {
+            combinedText += '\n\n${result.combinedText}';
           } else {
-            final errorMsg = result.error ?? 'Unknown error occurred';
-            print('❌ Failed to process PDF ${document.name}: $errorMsg');
-
-            if (_selectedImages.length + _selectedDocuments.length > 1) {
-              combinedText += '📄 ${document.name} (PDF)\n';
-              combinedText += 'ERROR: $errorMsg\n\n${'-' * 40}\n\n';
-            } else {
-              combinedText = 'Error processing PDF: $errorMsg';
-            }
-            _showErrorSnackBar('Failed to process PDF ${document.name}: $errorMsg');
+            combinedText = result.combinedText!;
           }
+
+          _showSuccessSnackBar(
+            'Processed ${result.processedCount} PDFs successfully!',
+          );
         } else {
-          // Handle non-PDF documents
-          print('⚠ Skipping non-PDF document: ${document.name}');
-          if (_selectedImages.length + _selectedDocuments.length > 1) {
-            combinedText += '📄 ${document.name}\n';
-            combinedText += '⚠ Only PDF documents are supported for text extraction\n\n${'-' * 40}\n\n';
+          final errorMsg = result.error ?? 'Unknown error occurred';
+          print('❌ Failed to process PDFs: $errorMsg');
+
+          if (combinedText.isNotEmpty) {
+            combinedText += '\n\nError processing PDFs: $errorMsg';
           } else {
-            combinedText = 'Only PDF documents are supported for text extraction';
+            combinedText = 'Error processing PDFs: $errorMsg';
           }
-          _showInfoSnackBar('Only PDF documents are supported for text extraction');
+          _showErrorSnackBar('Failed to process PDFs: $errorMsg');
         }
       }
+
       // Update the final text
       print('📝 Final combined text length: ${combinedText.length}');
       setState(() => _recognizedText = combinedText.trim());
 
-      // Show final success message if we processed any files successfully
-      final hasSuccessfulProcessing =
-          (_selectedImages.isNotEmpty &&
-              _recognizedText.isNotEmpty &&
-              !_recognizedText.contains('Failed')) ||
-          (_selectedDocuments.isNotEmpty &&
-              _recognizedText.contains('successfully'));
-
-      if (hasSuccessfulProcessing) {
+      // Show final success message
+      if (combinedText.isNotEmpty &&
+          !combinedText.contains('Error processing')) {
+        final totalProcessed =
+            (_selectedImages.length > 0 ? 1 : 0) +
+            (_selectedDocuments.length > 0 ? 1 : 0);
         print('🎉 Processing completed successfully!');
-        _showSuccessSnackBar('Processing completed successfully!');
+        _showSuccessSnackBar(
+          'Processing completed! ${_selectedImages.length} images and ${_selectedDocuments.length} PDFs processed.',
+        );
       } else {
         print('⚠ Processing completed with warnings or no files processed');
       }

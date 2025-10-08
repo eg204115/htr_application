@@ -32,29 +32,65 @@ class OcrProcessResult {
 class ConvertHandwrittenResult {
   final bool success;
   final String? error;
-  final String? text; // Extracted text
-  final double? confidence; // Confidence score
-  final String? filename;
+  final String? combinedText; // Combined text from all files
+  final double? overallConfidence;
+  final int? processedCount;
+  final int? totalCount;
+  final List<FileResult>? results; // Individual file results
 
   ConvertHandwrittenResult({
     required this.success,
     this.error,
-    this.text,
-    this.confidence,
-    this.filename,
+    this.combinedText,
+    this.overallConfidence,
+    this.processedCount,
+    this.totalCount,
+    this.results,
   });
 
   factory ConvertHandwrittenResult.fromJson(Map<String, dynamic> j) {
+    List<FileResult>? results;
+    if (j['results'] is List) {
+      results = (j['results'] as List).map((item) => FileResult.fromJson(item)).toList();
+    }
+
     return ConvertHandwrittenResult(
       success: j['success'] == true,
       error: j['error'] as String?,
-      text: j['text'] as String?,
-      confidence: (j['confidence'] is num) ? (j['confidence'] as num).toDouble() : null,
-      filename: j['filename'] as String?,
+      combinedText: j['combined_text'] as String?,
+      overallConfidence: (j['overall_confidence'] is num) ? (j['overall_confidence'] as num).toDouble() : null,
+      processedCount: (j['processed_count'] is num) ? (j['processed_count'] as num).toInt() : null,
+      totalCount: (j['total_count'] is num) ? (j['total_count'] as num).toInt() : null,
+      results: results,
     );
   }
 }
 
+class FileResult {
+  final String filename;
+  final bool success;
+  final String? text;
+  final double? confidence;
+  final String? error;
+
+  FileResult({
+    required this.filename,
+    required this.success,
+    this.text,
+    this.confidence,
+    this.error,
+  });
+
+  factory FileResult.fromJson(Map<String, dynamic> j) {
+    return FileResult(
+      filename: (j['filename'] ?? '').toString(),
+      success: j['success'] == true,
+      text: j['text'] as String?,
+      confidence: (j['confidence'] is num) ? (j['confidence'] as num).toDouble() : null,
+      error: j['error'] as String?,
+    );
+  }
+}
 
 class OcrHealth {
   final String status;
@@ -130,22 +166,30 @@ class OcrApiService {
   }
 
   /// Convert PDF or image to text PDF using /convert-handwritten endpoint
-  Future<ConvertHandwrittenResult> convertHandwritten(PlatformFile file) async {
+  Future<ConvertHandwrittenResult> convertHandwritten(List<PlatformFile> files) async {
     try {
-      final form = FormData.fromMap({
-        'file': await MultipartFile.fromFile(file.path!, filename: file.name),
-      });
+      // Create form data with multiple files
+      final formData = FormData();
+
+      for (int i = 0; i < files.length; i++) {
+        final file = files[i];
+        formData.files.add(MapEntry(
+          'files', // Use 'files' as field name for multiple files
+          await MultipartFile.fromFile(file.path!, filename: file.name),
+        ));
+      }
+
+      print('📤 Sending ${files.length} files to convert-handwritten endpoint');
 
       final response = await _dio.post(
         'convert-handwritten',
-        data: form,
+        data: formData,
       );
 
       if (response.statusCode == 200) {
         // Parse JSON response
         final responseData = response.data;
         print('📊 Convert handwritten response type: ${responseData.runtimeType}');
-        print('📊 Convert handwritten response: $responseData');
 
         if (responseData is Map<String, dynamic>) {
           return ConvertHandwrittenResult.fromJson(responseData);

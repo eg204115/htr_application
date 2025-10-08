@@ -5,7 +5,6 @@ import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 import 'package:open_file/open_file.dart';
 import 'package:syncfusion_flutter_pdf/pdf.dart';
-
 import '../constants/colors.dart';
 
 class RecognitionResultWidget extends StatefulWidget {
